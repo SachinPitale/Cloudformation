@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Mapping example 03
+
+Parameters:
+  EnvName:
+    Type: String
+    Default: dev
+    AllowedValues: 
+      - dev
+      - prod
+
+Mappings:
+  MyimageId:
+    us-east-1:
+      img : ami-0d5eff06f840b45e9
+    us-east-2:
+      img: ami-077e31c4939f6a2f3
+  MyEnvMap:
+    dev:
+      InstanceType: t2.small
+    prod:
+      InstanceType: t2.micro
+  MyKeyMap:
+    us-east-1:
+      KeyName: sachin
+    us-east-2:
+      KeyName: sachin-east-2
+
+
+Resources:
+  MyEC2Machine:
+    Type: AWS::EC2::Instance
+    Description: To create EC2 machine
+    Properties:
+      ImageId: !FindInMap
+        -  MyimageId
+        - !Ref AWS::Region
+        - img
+      InstanceType: !FindInMap
+        - MyEnvMap
+        - !Ref EnvName
+        - InstanceType
+      KeyName: !FindInMap
+        - MyKeyMap
+        - !Ref AWS::Region
+        - KeyName
+      SecurityGroups:
+        - default

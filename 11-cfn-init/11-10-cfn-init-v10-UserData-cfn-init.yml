@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cfn-init example and test this template in ohio us-east-2 region
+
+
+Parameters:
+  ImageId:
+    Type: String
+    Description: Default Imageid for ohio us-east-2 region
+    Default: ami-0cd3dfa4e37921605
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Choose the EC2 Key
+  InstanceType:
+    Type: String
+    Description: Default Instance type is t2.micro
+    Default: t2.micro
+  
+
+
+
+Resources:
+  TestSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: TestSG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          ToPort: 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          ToPort: 8080
+          FromPort: 8080
+          CidrIp: 0.0.0.0/0
+  
+  TestEC2:
+    Type: AWS::EC2::Instance
+    Metadata:
+      Comment: Deploy a simple tomcat application
+      AWS::CloudFormation:Init:
+        config:
+          packages:
+            yum:
+              java-1.8.0-openjdk.x86_64: []
+              java-1.8.0-openjdk-devel: []
+              tomcat8: []
+          groups:
+            groupone: {}
+            grouptwo:
+              - git: "502"
+            sachingroup: {}
+          users:
+            user1:
+              group:
+                - groupone
+                - grouptwo
+                - sachingroup
+              uid: "502"
+              homeDir: "/home"
+          sources:
+            /tmp: "https://sachinpitaledevops1234.s3.amazonaws.com/CFN-INIT/demo1.zip"
+          files:
+            "/etc/cfn/cfn-hub-conf":
+              content: !Sub
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+              mode: "000400"
+              owner: "root"
+              group: "root"
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf"
+              content:
+                [cfn-auto-reloader-hook]
+                triggers: post.update
+                path=Resources.TestEC2.Metadata.AWS::CloudFormation:Init
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource  TestEC2 --region ${AWS::Region}
+              mode: "000400"
+              owner: "root"
+              group: "root"
+          commands:
+            test1:
+              command: "chmod 755 demo.war"
+              cwd: "/tmp"
+            test2:
+              command: "sudo yum -y erase java-1.7.0-openjdk.x86_64"
+              cwd: "~" 
+            test3:
+              command: "cp demo.war /var/lib/tomcat8/webapps"
+              cwd: "/tmp"
+          services:
+            sysvinit:
+              tomcat8:
+                enabled: "true"
+                ensureRunning: "true"
+    Properties:
+      ImageId:  !Ref ImageId
+      KeyName:  !Ref KeyName
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref TestSecurityGroup
+      UserData:
+        "Fn::Base64":
+          !Sub |
+            #!/bin/bash -xe
+            # Get latest CloudFormation package - These packages change frequently
+            yum update -y aws-cfn-bootstrap
+            # Start cfn-init to install all Metadata content (packages, sources, files, commands, and servies)
+            /opt/aws/bin/cfn-init -s ${AWS::StackId} -r TestEC2 --region ${AWS::Region} || error_exit "failed to cfn-init"
+      

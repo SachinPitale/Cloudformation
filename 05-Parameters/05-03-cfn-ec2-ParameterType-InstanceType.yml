@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AZ Parameter Demo
+
+Parameters:
+  MyKeyName:
+    Description: SSh Key name
+    Type: AWS::EC2::KeyPair::KeyName
+  AvabilityZone:
+    Type: String
+    Description: AV zone
+    Default: us-east-1a
+    AllowedValues:
+      - us-east-1a
+      - us-east-2a
+      - us-east-3a
+  MyinstanceType:
+    Type: String
+    Description: EC2 machine size
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+
+Resources:
+  MyEC2:
+    Type: AWS::EC2::Instance
+    Description: Ec2 machine
+    Properties:
+      ImageId: ami-0d5eff06f840b45e9
+      InstanceType: !Ref MyinstanceType
+      KeyName: !Ref MyKeyName
+      SecurityGroups:
+        - !Ref SecurityGroups
+  SecurityGroups:
+    Type: AWS::EC2::SecurityGroup
+    Description: SSH connnection for security group
+    Properties:
+      GroupDescription: My SSH security  group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+     
+

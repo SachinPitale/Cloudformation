@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Metadata Interface 
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: "Select Your Environemnt "
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+      - qa
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Choose your Key name 
+  InstanceSize:
+    Type: String
+    Description: Select your Instance size as per your requirement
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.mediume
+  AvailabilityZone:
+    Type: String
+    Description: Select your AvailabilityZone Zone
+    Default: us-east-1a
+    AllowedValues:
+      - us-east-1a
+      - us-east-1b
+      - us--east-1c
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: EC2 Instance Configuration
+        Parameters:
+          - AvailabilityZone
+          - InstanceSize
+          - KeyName
+      - Label:
+          default: "Environment Configuration"
+        Parameters:
+          - EnvironmentName
+    ParametersLabels:
+      EnvironmentName:
+        default: "Which environment we are planning to create this instance?"
+      KeyName:
+        default: "Be aware that once keyname is selected we cannot change it unless instance replaced"
+
+
+
+Conditions:
+  CreateEIPProd: !Equals [!Ref EnvironmentName, prod]
+
+
+
+Resources:
+  TestEC2:
+    Type: AWS::EC2::Instance
+    Description: Creating the EC2 for testing requirement
+    Properties:
+      ImageId: ami-0d5eff06f840b45e9
+      InstanceType: !Ref InstanceSize
+      KeyName: !Ref KeyName
+      AvailabilityZone: !Ref AvailabilityZone
+
+
+  ProdEIP:
+    Type: AWS::EC2::EIP
+    Condition: CreateEIPProd
+    Properties:
+      InstanceId: !Ref TestEC2

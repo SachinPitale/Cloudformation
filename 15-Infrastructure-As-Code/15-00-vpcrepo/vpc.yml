@@ -1,0 +1,103 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Network VPC
+
+Parameters:
+  VPCCIDR:
+    Type: String
+    Description: VPC CIDR Range
+  Subnet01CIDR:
+    Type: String
+    Description: Subnet Cidr range
+  Subnet02Block:
+    Type: String
+    #Default: 10.0.2.0/24
+    Description: CidrBlock for Subnet 02 within the VPC.  
+
+
+Resources:
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Description: Create a new VPC
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "{AWS::StackName}-myvpc"
+  
+  Subnet01:
+    Type: AWS::EC2::Subnet
+    Description: Create a subnet for vpc
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: !Ref Subnet01CIDR
+      Tags:
+        - Key: Name
+          Value: !Sub "{AWS::StackName}-subnet01"
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs:
+              Ref: AWS::Region
+  
+  Subnet02:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: !Ref Subnet02Block 
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-Subnet02"    
+      AvailabilityZone: 
+        Fn::Select:
+          - '1'
+          - Fn::GetAZs:
+              Ref: AWS::Region
+
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Description: Route table
+    Properties:
+      VpcId: !Ref MyVPC
+      Tags:
+        - Key: Name
+          Value: Public Subnet
+        - Key: Network
+          Value: Public
+  
+  Subnet01RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet01
+      RouteTableId: !Ref RouteTable
+  
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref MyVPC
+  
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  
+Outputs:
+  Subnet01:
+    Description: Subnet01
+    Value: !Ref Subnet01
+  
+  VpcId:
+    Description: VpcId
+    Value: !Ref MyVPC
+
+
+         

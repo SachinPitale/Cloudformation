@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC Nested Stack Template
+
+
+Parameters:
+  VPCCidrBlock:
+    Description: Mention your VPC CIDR block
+    Type: String
+    Default: 10.0.0.0/16
+  SubnetCidr:
+    Type: String
+    Description: Specific the Subnet CIDR block
+    Default: 10.0.1.0/24
+
+Metadata:
+  AWS::Cloudformation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Dev VPC Configuration
+          Parameters:
+            - VPCCidrBlock
+            - SubnetCidr
+    ParametersLables:
+      VpcBlock:
+        default: VPC CIDR Range selection 
+
+  
+
+
+Resources:
+  MYVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key : Name
+          Value: !Sub ${AWS::StackName}-MYVPC
+  
+  Subnet01:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref SubnetCidr
+      VpcId: !Ref MYVPC
+      AvailabilityZone:
+        Fn::Select:
+          - '0'
+          - Fn::GetAZs:
+              Ref: AWS::Region
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-Subnet01
+  
+
+  MyRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MYVPC
+      Tags:
+        - Key: Name
+          Value: Public Subnet
+        - Key: Network
+          Value: Public
+  
+  SubnetAssociationRouteTable:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref MyRouteTable
+      SubnetId: !Ref Subnet01
+  
+  MyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+  
+  AttachIGtoVPC:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref MyInternetGateway
+      VpcId: !Ref MYVPC
+
+  Route:
+    DependsOn: AttachIGtoVPC
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref MyRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:  !Ref MyInternetGateway
+
+
+Outputs:
+  Subnet01Id:
+    Description: Id of Subnet 01
+    Value: !Ref Subnet01
+
+  VpcId:
+    Description: ID of VPC
+    Value: !Ref MYVPC
+
+
+

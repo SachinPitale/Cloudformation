@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Root Stack Template
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Select the key for accessing EC2
+  VPCCidrBlock:
+    Description: Mention your VPC CIDR block
+    Type: String
+    Default: 10.0.0.0/16
+  SubnetCidr:
+    Type: String
+    Description: Specific the Subnet CIDR block
+    Default: 10.0.1.0/24
+
+
+
+
+
+
+
+Resources:
+
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://sachinpitaledevops1234.s3.amazonaws.com/CFN-INIT/13-01-NestedStack-VPC.yml
+      Parameters:
+        VPCCidrBlock: !Ref VPCCidrBlock
+        SubnetCidr: !Ref SubnetCidr
+      TimeoutInMinutes: 5
+  
+  DevSecurityGroupStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://sachinpitaledevops1234.s3.amazonaws.com/CFN-INIT/13-03-NestedStack-SG.yml
+      Parameters:
+        VPCID: !GetAtt  VPCStack.Outputs.VpcId
+      TimeoutInMinutes: 5
+
+
+  TestEC2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-04768381bf606e2b3
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          SubnetId: !GetAtt VPCStack.Outputs.Subnet01Id
+          GroupSet:
+            - !GetAtt DevSecurityGroupStack.Outputs.DevSGGroupId
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          sudo yum update
+          sudo yum -y erase java-1.7.0-openjdk.x86_64
+          sudo yum -y install java-1.8.0-openjdk.x86_64
+          sudo yum -y install java-1.8.0-openjdk-devel
+          sudo yum -y install tomcat8
+          service tomcat8 start
+          mkdir /usr/share/tomcat8/webapps/ROOT
+          touch /usr/share/tomcat8/webapps/ROOT/index.html
+          echo "Cloud Formation Tomcat8" > /usr/share/tomcat8/webapps/ROOT/index.html
+
+
+
+Outputs:
+  AppURL:
+    Description: Application URL to access
+    Value: !Sub 'http://${TestEC2.PublicDnsName}:8080/index.html'

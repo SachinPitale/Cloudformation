@@ -1,0 +1,59 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description" : "Launching EC2 machine",
+    "Parameters": {
+                "vpcid": {
+                       "Description" : "vpcId",
+                        "Type": "AWS::EC2::VPC::Id",
+                        "Defaults":  "-"
+                        },
+                "Keypair": {
+                        "Description" : "It is your key value pair",
+                         "Type": "AWS::EC2::KeyPair::KeyName",
+                         "Defaults": "-"   
+                },       
+                "InstanceType": {
+                            "Description" : "Select your instance Type",
+                             "Type": "String",
+                             "Defaults" : "t2.micro",
+                             "AllowedValues" : ["t2.micro","m.small","m1.medium"]
+                }
+    },
+    "Resources": {
+
+            "ApacheSG": { 
+                 "Type" : "AWS::EC2::SecurityGroup",
+                 "Properties" : {
+                            "GroupDescription" : "Allow Http traffic",
+                            "VpcId": {"Ref": "vpcid"},
+                            "SecurityGroupIngress" : [{
+                                "IpProtocol" : "tcp",
+                                "FromPort" : 80,
+                                "ToPort" : 80,
+                                "CidrIp" : "0.0.0.0/0"
+                             },
+                             {
+                                "IpProtocol" : "tcp",
+                                "FromPort" : 22,
+                                "ToPort" : 22,
+                                "CidrIp" : "0.0.0.0/0"
+                             }],
+                        } 
+            },
+              "Ec2Instance": {
+                        "Type" : "AWS::EC2::Instance",
+                        "Properties": {
+                                "KeyName": {"Ref": "Keypair"},
+                                "ImageID": "ami-0b898040803850657",
+                                "InstanceType": {"Ref": "InstanceType"},
+                                "SecurityGroupIds" : {"Ref": "vpcid"},
+
+
+                                  }  
+
+
+    }
+
+
+}
+}

@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Key parameter demo
+Parameters:
+  MyKeyName:
+    Description: Select Key name for the list
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+  DevEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0d5eff06f840b45e9
+      InstanceType: t2.micro
+      KeyName: !Ref MyKeyName
+      SecurityGroups:
+        - default
+        - !Ref SSHSecurityGroup
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      SecurityGroupIngress:
+        - IpProtocol: TCP
+          FromPort : 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+

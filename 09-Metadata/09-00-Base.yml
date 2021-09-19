@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Base template for Metadata
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+      - qa
+  KyeName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Choose Your Key for EC2 Machine
+  InstanceType:
+    Type: String
+    Description: Choose EC2 Instance Type Based on your Requirement
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium 
+  AvailabilityZone:
+    Type: String
+    Description: Select Your Avability Zone where you want to deploy your EC2 machine
+    Default: us-east-1a
+    AllowedValues:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+
+
+
+Conditions:
+  CreateProdEIP: !Equals [!Ref EnvironmentName, prod]
+
+Resources:
+  TestEC2:
+    Type: AWS::EC2::Instance
+    Description: To creating EC2 Machine for testing Purpose
+    Properties:
+      ImageId: ami-0d5eff06f840b45e9
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KyeName
+      AvailabilityZone: !Ref AvailabilityZone
+  
+  ProdEIP:
+    Type: AWS::EC2::EIP
+    Condition: CreateProdEIP
+    Properties:
+      InstanceId: !Ref TestEC2
+
+

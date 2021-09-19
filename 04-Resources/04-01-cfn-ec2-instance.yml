@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Basic EC2 Instance
+Resources:
+  DEVEC2TEST:
+    Type: AWS::EC2::Instance
+    Description: "This is my test ec2 machine"
+    Properties:
+      ImageId: ami-04ca7d516f2843a7a
+      InstanceType: t2.micro
+      KeyName: sachin
+      SecurityGroups:
+        - default

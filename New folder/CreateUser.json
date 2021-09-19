@@ -1,0 +1,21 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "I am creating User using CloudFormation",
+    "Resources": {
+
+                "MYUser":{
+                    "Type" : "AWS::IAM::User",
+                    "Properties" : {
+                        "UserName" : "Tom",
+
+
+                    }
+
+
+
+                }
+
+
+    }
+
+}

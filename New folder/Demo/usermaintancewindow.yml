@@ -1,0 +1,17 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: ''
+Resources:
+  sachin7AMto7PM:
+    Type: 'Custom::ServiceInstanceSchedule'
+    Properties:
+      ServiceToken: >-
+        arn:aws:lambda:us-east-1:205421220812:function:rds-schedular-InstanceSchedulerMain
+      Enforced: 'True'
+      UseMaintenanceWindow: 'True'
+      Enforced: 'false'
+      Timezone: Asia/Kolkata
+      Periods:
+        - BeginTime: '07:00'
+          EndTime: '17:00'
+          WeekDays: Mon-Sun

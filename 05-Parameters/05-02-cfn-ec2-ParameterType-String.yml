@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AZ Parameter demo
+
+Parameters:
+  MyKeyName:
+    Description: KeyName
+    Type: AWS::EC2::KeyPair::KeyName
+  MyAvabilityZone:
+    Description: We will use to deploy the AV for deploying resources
+    Type: String
+    Default: us-east-1a
+    AllowedValues:
+      - us-east-1a
+      - us-east-2a
+      - us-east-3a
+
+
+Resources:
+  MyEC2:
+    Type: AWS::EC2::Instance
+    Description: we are going to creat EC2 for testing purpose
+    Properties:
+      ImageId: ami-0d5eff06f840b45e9
+      InstanceType: t2.micro
+      KeyName: !Ref MyKeyName
+      SecurityGroups:
+        - default
+        - !Ref MySecurityGroup
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Description: We will use for new machine
+    Properties:
+      GroupDescription: My SSH security  group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          ToPort: 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0

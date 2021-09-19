@@ -1,0 +1,39 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description" : "Creation EC2 instance with parameter",
+    "Parameters":{
+            "Keyname": {
+                   "Description": "Enter you key pair name",
+                   "Type": "String",
+                   "Default": "Sachin" 
+
+            },
+            "InstanceType" : {
+                    "Description" : "Enter you instance Type",
+                    "Type" : "String"
+                    }
+    },
+
+
+    "Resources": {
+            "EC2Creation" : {
+                    "Type" : "AWS::EC2::Instance",
+                    "Properties": {
+                           "KeyName": {"Ref": "Keyname"}, 
+                           "ImageId": "ami-0b898040803850657",
+                           "InstanceType": {"Ref" : "InstanceType"},
+                           "SecurityGroupIds" : ["sg-2ffe696a"]
+
+
+                    }
+
+
+            }
+
+
+
+
+    }
+
+
+}

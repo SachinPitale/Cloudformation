@@ -1,0 +1,24 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This is my first EC2 instance",
+     "Resources":{
+           "HelloWorld":{
+                "Type" : "AWS::EC2::Instance",
+                "Properties" : {
+                        "KeyName" : "Sachin",
+                        "ImageId" : "ami-0b898040803850657",
+                        "InstanceType" : "t2.micro",
+                        "SecurityGroupIds" : ["sg-2ffe696a"]
+
+                    }
+
+
+                    }
+
+
+
+
+     }
+
+
+}

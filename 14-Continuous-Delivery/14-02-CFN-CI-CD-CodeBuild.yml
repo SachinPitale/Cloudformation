@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create CodeBuild Stack Template
+
+Parameters:
+  ApplicationRepoName:
+    Type: String
+    Description: Code Commit Repository Name
+    Default:  ccdemo
+  ArtifactStoreS3Location:
+    Type: String
+    Description: S3 Bucket to store artifact 
+    Default: rest-apps-sachin
+
+
+Resources:
+  CodeBuildRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName:
+        !Sub "CodeBuildRole-${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /service-role/
+      Policies:
+        - PolicyName: "CodeBuildCICDAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "codecommit:GitPull"
+                Resource:
+                  - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${ApplicationRepoName}"
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*"
+              - Effect: "Allow"
+                Action:
+                  - "s3:PutObject"
+                  - "s3:GetObject"
+                  - "s3:GetObjectVersion"
+                  - "s3:ListBucket"
+                Resource:
+                  - !Sub "arn:aws:s3:::codepipeline-${AWS::Region}-*"
+                  - !Sub "arn:aws:s3:::${ArtifactStoreS3Location}/*"
+                  - !Sub "arn:aws:s3:::${ArtifactStoreS3Location}"
+  BuildRestAppProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "BuildRestAppProject-${AWS::StackName}"
+      Description:  Build War file for rest application
+      ServiceRole: !GetAtt [CodeBuildRole, Arn ]
+      Artifacts:
+        Type: S3
+        Location: !Ref ArtifactStoreS3Location
+        Name: !Sub "BuildRestAppProject-${AWS::StackName}"
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:3.0
+      Source:
+        Location: !Sub https://git-codecommit.us-east-2.amazonaws.com/v1/repos/${ApplicationRepoName}
+        Type: CODECOMMIT
+      TimeoutInMinutes: 5
+      Tags:
+        - Key: Name
+          Value: !Sub BuildRestAppCFN-${AWS::StackName}
+  
+
+
+
+  

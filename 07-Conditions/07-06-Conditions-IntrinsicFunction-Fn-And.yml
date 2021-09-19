@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description : Condition Stack 
+
+Parameters:
+  Environment:
+    Type: String
+    Description: Choose your Environment
+    Default: dev
+    AllowedValues:
+      - dev
+      - Prod
+
+
+Mappings:
+  EC2ImageId:
+    us-east-1:
+      ImageId: ami-0d5eff06f840b45e9
+    us-east-2:
+      ImageId: ami-077e31c4939f6a2f3
+  EC2InstaceSize:
+    dev:
+      InstanceType: t2.micro
+    Prod:
+      InstanceType: t2.small
+
+
+Conditions:
+  IfRegionkey: !And [!Or [!Equals [ !Ref 'AWS::Region', us-east-1], !Equals [!Ref 'AWS::Region', us-east-2] ], !Equals [!Ref  Environment, dev ]]
+  CreateEIPProd: !Equals [!Ref Environment, Prod]
+  SecurityGroupDEV: !Equals [!Ref Environment, dev]
+  SecurityGroupPROD: !Not [{Condition: SecurityGroupDEV}]
+
+Resources:
+  EC2Test:
+    Type: AWS::EC2::Instance
+    Description: We are going  to create new ec2 machine.
+    Properties:
+      ImageId: !FindInMap
+        - EC2ImageId
+        - !Ref 'AWS::Region'
+        - ImageId
+      InstanceType: !FindInMap
+        - EC2InstaceSize
+        - !Ref Environment
+        - InstanceType
+      KeyName: !If [ IfRegionkey, sachin, sachin-east-2 ]
+      SecurityGroups: !If [SecurityGroupDEV, [!Ref DEVSG], [!Ref PRODSG]]
+  
+
+  ProdEIP:
+    Type: AWS::EC2::EIP
+    Condition: CreateEIPProd
+    Properties:
+      InstanceId: !Ref EC2Test
+  
+
+  DEVSG:
+    Type: AWS::EC2::SecurityGroup
+    Condition: SecurityGroupDEV
+    Properties:
+      GroupDescription: To Create SG for DEV
+      SecurityGroupIngress:
+        IpProtocol: tcp
+        ToPort: 22
+        FromPort: 22
+        CidrIp: 0.0.0.0/0
+
+  PRODSG:
+    Type: AWS::EC2::SecurityGroup
+    Condition: SecurityGroupPROD
+    Properties:
+      GroupDescription: To Create SG for Prod
+      SecurityGroupIngress:
+        IpProtocol: tcp
+        ToPort: 22
+        FromPort: 22
+        CidrIp: 0.0.0.0/0
+  
+
+
+
+

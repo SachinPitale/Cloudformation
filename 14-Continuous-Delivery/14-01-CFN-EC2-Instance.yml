@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: EC2 Instance with Instance profile role to access S3 buckets
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Choose keyname to access the ec2 machine 
+
+Resources:
+  CICDInstaceProfileRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+               - ec2.amazonaws.com
+            Action: 'sts:AssumeRole'  
+      Path: /
+      Policies:
+        - PolicyName: CICDEC2Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:Get*'
+                  - 's3:List*'
+                Resource: '*'
+
+
+  InstanceProfileRole:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref  CICDInstaceProfileRole   
+
+  
+  LabSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: LabSG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+
+  DevEC2:
+    Type: AWS::EC2::Instance
+    Description: Dev EC2 machine
+    Properties:
+      ImageId: ami-0cd3dfa4e37921605
+      KeyName: !Ref KeyName
+      InstanceType: t2.micro
+      SecurityGroups:
+        - !Ref LabSecurityGroup
+      IamInstanceProfile: !Ref InstanceProfileRole
+      Tags:
+        - Key: Name
+          Value: dev
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          sudo yum update
+          sudo yum install ruby
+          sudo yum install wget
+          sudo yum -y erase java-1.7.0-openjdk.x86_64
+          sudo yum -y install java-1.8.0-openjdk.x86_64
+          sudo yum -y install java-1.8.0-openjdk-devel
+          sudo yum -y install tomcat8
+          cd /home/ec2-user
+          wget https://aws-codedeploy-us-east-2.s3.amazonaws.com/latest/install
+          chmod +x ./install
+          sudo ./install auto
+
+  ProdEC2:
+    Type: AWS::EC2::Instance
+    Description: Production EC2 machine
+    Properties:
+      ImageId: ami-0cd3dfa4e37921605
+      KeyName: !Ref KeyName
+      InstanceType: t2.micro
+      SecurityGroups:
+        - !Ref LabSecurityGroup
+      IamInstanceProfile: !Ref InstanceProfileRole
+      Tags:
+        - Key: Name
+          Value: Prod
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          sudo yum update
+          sudo yum install ruby
+          sudo yum install wget
+          sudo yum -y erase java-1.7.0-openjdk.x86_64
+          sudo yum -y install java-1.8.0-openjdk.x86_64
+          sudo yum -y install java-1.8.0-openjdk-devel
+          sudo yum -y install tomcat8
+          cd /home/ec2-user
+          wget https://aws-codedeploy-us-east-2.s3.amazonaws.com/latest/install
+          chmod +x ./install
+          sudo ./install auto
+
+Outputs:
+  DevApplicationURL:
+    Description: Dev Application access URL
+    Value: !Sub 'http://${DevEC2.PublicDnsName}:8080/ccdemo/hello'
+  
+  DevApplicationURL:
+    Description: Prod Application access URL
+    Value: !Sub 'http://${ProdEC2.PublicDnsName}:8080/ccdemo/hello'

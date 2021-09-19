@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Condition Template
+
+Parameters:
+  ENVKeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Select Your Key name for EC2
+  EnvType:
+    Type: String
+    Description: Mention Your environment
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+
+Mappings:
+  ImageIdentification:
+    us-east-1:
+      ImageId: ami-0d5eff06f840b45e9
+    us-east-2:
+      ImageId: ami-077e31c4939f6a2f3
+  EC2Type:
+    dev:
+      InstanceType: t2.small
+    prod:
+      InstanceType: t2.micro
+
+
+Conditions:
+  CreateEIPforProd: !Equals [!Ref EnvType, prod]
+  CreateSecurityGroupforDev: !Equals [!Ref EnvType, dev]
+  CreateSecurityGroupforProd: !Equals [!Ref EnvType, prod]
+
+
+Resources:
+  TestEC2:
+    Type: AWS::EC2::Instance
+    Description: EC2 Machine for test lab
+    Properties:
+      ImageId: !FindInMap
+        - ImageIdentification
+        - !Ref AWS::Region
+        - ImageId
+      InstanceType: !FindInMap
+        - EC2Type
+        - !Ref EnvType
+        - InstanceType
+      KeyName: !Ref ENVKeyName
+      SecurityGroups: !If [CreateSecurityGroupforDev, [!Ref DevSecurityGroup], [!Ref ProdSecurityGroup]]
+
+
+  ProdEIP:
+    Type: AWS::EC2::EIP
+    Condition: CreateEIPforProd
+    Properties:
+      InstanceId: !Ref TestEC2
+  
+
+  DevSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: CreateSecurityGroupforDev
+    Properties:
+      GroupDescription: DevSG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  
+  ProdSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: CreateSecurityGroupforProd
+    Properties:
+      GroupDescription: ProdSG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+    

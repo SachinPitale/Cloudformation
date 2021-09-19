@@ -1,0 +1,17 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description": "Creating S3 bucket",
+    "Resources":  {
+            "MyS3": {
+                "Type" : "AWS::S3::Bucket",
+                 "Properties": {
+                    "BucketName" : "sachinpitale1234"                 }
+
+
+                  }  
+            
+
+            } 
+    }
+
+

@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: First Mapping Example
+
+Mappings:
+  MyRegionMap:
+    us-east-1:
+      HVM64: ami-0d5eff06f840b45e9
+    us-east-2:
+      HVM64: ami-077e31c4939f6a2f3
+  MyKeyName:
+    us-east-1:
+      keyName: sachin
+    us-east-2:
+      keyName: sachin-east-2
+
+
+Resources:
+  Myec2:
+    Type: AWS::EC2::Instance
+    Description: EC2 machine
+    Properties:
+      ImageId: !FindInMap
+        - MyRegionMap
+        - !Ref AWS::Region
+        - HVM64
+      InstanceType: t2.micro
+      KeyName: !FindInMap
+        - MyKeyName
+        - !Ref AWS::Region
+        - keyName
+      SecurityGroups:
+        - default

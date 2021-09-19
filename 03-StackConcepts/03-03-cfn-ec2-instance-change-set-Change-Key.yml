@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  DevEC2Instance:
+    Type : 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-04ca7d516f2843a7a
+      InstanceType: t2.micro
+      KeyName: sachin123

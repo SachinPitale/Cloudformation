@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Mapping
+Resources:
+  MyVMEC2:
+    Type: AWS::EC2::Instance
+    Description: EC2 machine
+    Properties:
+      ImageId: ami-0d5eff06f840b45e9
+      KeyName: sachin
+      InstanceType: t2.micro
+      SecurityGroups:
+        - default

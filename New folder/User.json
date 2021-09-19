@@ -1,0 +1,17 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description" : "Creating AWS IAM user",
+    "Resources" : {
+             "Myuser" : {
+                "Type" : "AWS::IAM::User",
+                 "Properties" : {
+                     "UserName" : "Yogesh"
+
+            }
+            }
+
+    }
+
+
+
+}

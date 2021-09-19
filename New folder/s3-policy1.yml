@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Condition template
+Resources:
+   SampleBucketPolicy:
+      Type: 'AWS::S3::BucketPolicy'
+      Properties:
+        Bucket: sachinpitale12345sachin
+        PolicyDocument:
+          Statement:
+            - Action:
+                - 's3:GetObject'
+                - 's3:PutBucketPublicAccessBlock'
+              Effect: Allow
+              Sid: Stmt1621918689145
+              Resource: arn:aws:s3:::sachinpitale12345sachin
+              Principal: "*"

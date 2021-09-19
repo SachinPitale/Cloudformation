@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Condition template
+
+Resources:
+     ### S3 bucket that stores access logs for all other S3 buckets in THIS account in this region.
+     #   AWS does not allow other accounts to write to your S3 logging bucket
+     #   Each account (per region) HAS TO have its own logging bucket
+    S3AuditBucket:
+      Type: "AWS::S3::Bucket"
+      Properties:
+        AccessControl: LogDeliveryWrite
+        BucketName: sachinpitale12345sachin
+
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+
+
+        Tags:
+          - Key: 'env'
+            Value: 'prd'
+          - Key: 'support-group'
+            Value: 'dig-tech-cts-cloud-db-support-team'
+          - Key: 'Description'
+            Value: 'Logging bucket. All other buckets in this VPC should point to this bucket for s3 logging'
+          # Add tag 'account-logging' to conform with policy S3-070 - https://devcloud.swcoe.ge.com/devspace/display/TKUWA/S3+Bucket
+          - Key: 'account-logging'
+            Value: 'true'
+    SampleBucketPolicy:
+      Type: 'AWS::S3::BucketPolicy'
+      Properties:
+        Bucket: !Ref S3AuditBucket
+        PolicyDocument:
+          Statement:
+            - Action:
+                #- 's3:GetObject'
+                - 's3:PutBucketPublicAccessBlock'
+              
+              Effect: Deny
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref S3AuditBucket  
+              Principal: '*'                     
